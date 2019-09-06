@@ -1,0 +1,40 @@
+{
+    "/ill_availability_search_eds": {
+        "get": {
+            "x-mojo-to": "Com::PTFSEurope::AvailabilityEds::Api#search",
+            "operationId": "ApiSearchEds",
+            "tags": ["ill","availability"],
+            "parameters": [
+                {
+                    "name": "metadata",
+                    "in": "query",
+                    "description": "The metadata to use for searching",
+                    "required": true,
+                    "type": "string"
+                },
+                {
+                    "name": "start",
+                    "in": "query",
+                    "description": "Pagination: the record to start",
+                    "required": false,
+                    "type": "string"
+                },
+                {
+                    "name": "length",
+                    "in": "query",
+                    "description": "Pagination: the number of records to return",
+                    "required": false,
+                    "type": "string"
+                }
+            ],
+            "produces": [
+                "application/json"
+            ],
+            "responses": {
+                "200": {
+                    "description": "An array of search results, maybe an error"
+                }
+            }
+        }
+    }
+}
