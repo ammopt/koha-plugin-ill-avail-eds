@@ -319,12 +319,11 @@ sub parse_response {
     my ($response, $config) = @_;
     if ( !$response->is_success ) {
         return_error(
-            $config->c,
+            $config->{c},
             $config->{err_code},
             "$config->{error}: $response->status_line"
         );
     }
-
     return decode_json($response->decoded_content);
 }
 
