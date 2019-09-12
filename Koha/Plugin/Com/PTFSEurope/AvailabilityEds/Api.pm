@@ -36,7 +36,7 @@ sub search {
     my $base_url = "https://eds-api.ebscohost.com/";
 
     my $start = $c->validation->param('start') || 0;
-    my $length = $c->validation->param('length') || 20;
+    my $pageLength = $c->validation->param('pageLength') || 20;
 
     # Check we've got a userid and password specified in the config,
     # if not, we're using IP authentication
@@ -183,9 +183,9 @@ __BODY__
     );
 
     # Calculate which page of result we're requesting
-    my $page = floor($start / $length) + 1;
+    my $page = floor($start / $pageLength) + 1;
     my $search_response = $ua->request(
-        GET "${base_url}edsapi/rest/Search?resultsperpage=$length&pagenumber=$page&query=$query",
+        GET "${base_url}edsapi/rest/Search?resultsperpage=$pageLength&pagenumber=$page&query=$query",
         @search_headers
     );
 
@@ -201,7 +201,7 @@ __BODY__
         status => 200,
         openapi => {
             start => $start,
-            length => scalar @{$out},
+            pageLength => scalar @{$out},
             recordsTotal => $stats->{total},
             recordsFiltered => $stats->{total},
             results => {
