@@ -15,13 +15,13 @@ use Digest::MD5 qw( md5_hex );
 use MIME::Base64 qw( decode_base64 );
 use URI::Escape qw ( uri_unescape );
 
-our $VERSION = "1.0.1";
+our $VERSION = "1.0.2";
 
 our $metadata = {
     name            => 'ILL availability - EDS',
     author          => 'Andrew Isherwood',
     date_authored   => '2019-09-04',
-    date_updated    => "2019-09-04",
+    date_updated    => "2019-09-16",
     minimum_version => '18.11.00.000',
     maximum_version => undef,
     version         => $VERSION,
@@ -56,6 +56,7 @@ sub ill_availability_services {
         'title',
         'isbn',
         'issn',
+        'doi',
         'article_author',
         'article_title',
         'chapter_author',
@@ -63,13 +64,14 @@ sub ill_availability_services {
     ];
 
     # Establish if we can service this item
-    my $can_service = 0;
+    my $can_service_meta = 0;
+    my $can_service_context = 0;
     foreach my $property(@{$properties}) {
         if (
             $params->{metadata}->{$property} &&
             length $params->{metadata}->{$property} > 0
         ) {
-            $can_service++;
+            $can_service_meta++;
         }
     }
 
@@ -77,11 +79,11 @@ sub ill_availability_services {
     my $conf = decode_json($self->retrieve_data('avail_config') || '{}');
 	my $ui_context = $params->{ui_context};
     if ($conf->{"ill_avail_eds_display_${ui_context}"}) {
-        $can_service++;
+        $can_service_context++;
     }
 
     # Bail out if we can't do anything with this request
-    return 0 if $can_service < 2;
+    return 0 if $can_service_meta == 0 || $can_service_context == 0;
 
     my $endpoint = '/api/v1/contrib/' . $self->api_namespace .
         '/ill_availability_search_eds?metadata=';

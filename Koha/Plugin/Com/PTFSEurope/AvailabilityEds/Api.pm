@@ -53,7 +53,8 @@ sub search {
         TI => [ 'article_title', 'chapter', 'title' ],
         AU => [ 'article_author', 'chapter_author', 'author' ],
         IB => [ 'isbn' ],
-        IS => [ 'issn' ]
+        IS => [ 'issn' ],
+        TX => [ 'doi' ]
     );
 
     # Gather together what we've been passed
