@@ -97,10 +97,14 @@ sub ill_availability_services {
         plugin     => $self->{metadata}->{name},
         endpoint   => $endpoint,
         datatablesConfig => {
-            serverSide => 'true',
-            processing => 'true',
+            serverSide   => 'true',
+            processing   => 'true',
+	    pagingType   => 'simple',
             lengthChange => 'false',
-            colvis     => 'false'
+            info         => 'false',
+            lengthChange => 'false',
+            ordering     => 'false',
+            searching    => 'false'
         }
     };
 }
