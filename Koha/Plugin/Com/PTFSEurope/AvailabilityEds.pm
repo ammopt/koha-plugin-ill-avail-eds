@@ -102,7 +102,6 @@ sub ill_availability_services {
 	    pagingType   => 'simple',
             lengthChange => 'false',
             info         => 'false',
-            lengthChange => 'false',
             ordering     => 'false',
             searching    => 'false'
         }
