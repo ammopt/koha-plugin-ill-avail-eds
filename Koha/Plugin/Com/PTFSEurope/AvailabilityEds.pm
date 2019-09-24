@@ -99,7 +99,7 @@ sub ill_availability_services {
         datatablesConfig => {
             serverSide   => 'true',
             processing   => 'true',
-	    pagingType   => 'simple',
+	        pagingType   => 'simple',
             lengthChange => 'false',
             info         => 'false',
             ordering     => 'false',
