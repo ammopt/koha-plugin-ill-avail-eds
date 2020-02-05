@@ -180,7 +180,8 @@ __BODY__
 
     my @search_headers = (
         'Accept' => 'application/json',
-        'x-sessionToken' => $session_token
+        'x-sessionToken' => $session_token,
+        'x-authenticationToken' => $auth_token
     );
 
     # Calculate which page of result we're requesting
