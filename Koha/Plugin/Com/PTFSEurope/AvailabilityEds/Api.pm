@@ -331,7 +331,7 @@ sub parse_response {
 
 sub prep_param {
     my ($key, $value) = @_;
-    return "{AND},{$key}:{$value}";
+    return "AND,$key:$value";
 }
 
 sub return_error {
