@@ -41,6 +41,7 @@ sub new {
     my $self = $class->SUPER::new($args);
 
     $self->{schema} = Koha::Database->new()->schema();
+    $self->{config} = decode_json($self->retrieve_data('avail_config') || '{}');
 
     return $self;
 }
@@ -76,9 +77,8 @@ sub ill_availability_services {
     }
 
     # Can we display our results in this UI context
-    my $conf = decode_json($self->retrieve_data('avail_config') || '{}');
 	my $ui_context = $params->{ui_context};
-    if ($conf->{"ill_avail_eds_display_${ui_context}"}) {
+    if ($self->{config}->{"ill_avail_eds_display_${ui_context}"}) {
         $can_service_context++;
     }
 
@@ -130,9 +130,8 @@ sub configure {
     unless ( $cgi->param('save') ) {
 
         my $template = $self->get_template({ file => 'configure.tt' });
-        my $conf = $self->retrieve_data('avail_config') || '{}';
         $template->param(
-            config => scalar decode_json($conf)
+            config => scalar $self->{config}
         );
 
         $self->output_html( $template->output() );
