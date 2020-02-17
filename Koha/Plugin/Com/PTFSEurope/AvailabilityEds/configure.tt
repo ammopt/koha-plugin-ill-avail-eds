@@ -15,6 +15,10 @@
     <form id="ill_avail_configure" method="get">
         <input type="hidden" name="class" value="[% CLASS %]"/>
         <input type="hidden" name="method" value="[% METHOD %]"/>
+        <div id="ill_avail_eds_name" class="ill_avail_config_field">
+            <label for="ill_avail_name_input">Display name: </label><input id="ill_avail_name_input" placeholder="ILL availability - EDS" type="text" name="ill_avail_eds_name" value="[% config.ill_avail_eds_name || "ILL availability - EDS" %]">
+            <p>The text that is displayed in the user interface above search results from EDS</p>
+        </div>
         <div id="ill_avail_eds_userid" class="ill_avail_config_field">
             <label for="ill_avail_userid_input">EDS API user ID: </label><input id="ill_avail_userid_input" placeholder="joe_bloggs" type="text" name="ill_avail_eds_userid" value="[% config.ill_avail_eds_userid %]">
             <p>If your EDS API access is using UserID authentication, specify the user ID here.</p>

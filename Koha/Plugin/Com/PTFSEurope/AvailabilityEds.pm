@@ -46,6 +46,12 @@ sub new {
     return $self;
 }
 
+# Return our name
+sub get_name {
+    my ($self) = @_;
+    return $self->{config}->{ill_avail_eds_name} || 'ILL availability - EDS';
+};
+
 # Recieve a hashref containing the submitted metadata
 # and, if we can work with it, return a hashref of our service definition
 sub ill_availability_services {
@@ -94,8 +100,9 @@ sub ill_availability_services {
         id => md5_hex(
             $self->{metadata}->{name}.$self->{metadata}->{version}
         ),
-        plugin     => $self->{metadata}->{name},
-        endpoint   => $endpoint,
+        plugin   => $self->{metadata}->{name},
+        endpoint => $endpoint,
+        name     => $self->get_name(),
         datatablesConfig => {
             serverSide   => 'true',
             processing   => 'true',
