@@ -16,15 +16,15 @@
         <input type="hidden" name="class" value="[% CLASS %]"/>
         <input type="hidden" name="method" value="[% METHOD %]"/>
         <div id="ill_avail_eds_userid" class="ill_avail_config_field">
-            <label for="ill_avail_eds_userid">EDS API user ID: </label><input id="ill_avail_userid_input" placeholder="joe_bloggs" type="text" name="ill_avail_eds_userid" value="[% config.ill_avail_eds_userid %]">
+            <label for="ill_avail_userid_input">EDS API user ID: </label><input id="ill_avail_userid_input" placeholder="joe_bloggs" type="text" name="ill_avail_eds_userid" value="[% config.ill_avail_eds_userid %]">
             <p>If your EDS API access is using UserID authentication, specify the user ID here.</p>
         </div>
         <div id="ill_avail_eds_password" class="ill_avail_config_field">
-            <label for="ill_avail_eds_password">EDS API user password: </label><input id="ill_avail_password_input" placeholder="my_secret_password" type="text" name="ill_avail_eds_password" value="[% config.ill_avail_eds_password %]">
+            <label for="ill_avail_password_input">EDS API user password: </label><input id="ill_avail_password_input" placeholder="my_secret_password" type="text" name="ill_avail_eds_password" value="[% config.ill_avail_eds_password %]">
             <p>If your EDS API access is using UserID authentication, specify the password here.</p>
         </div>
         <div id="ill_avail_display_opac" class="ill_avail_config_field">
-            <label for="ill_avail_eds_display_opac">Display results in OPAC: </label>
+            <label for="ill_avail_display_opac_input">Display results in OPAC: </label>
             [% IF config.ill_avail_eds_display_opac %]
                 <input type="checkbox" id="ill_avail_display_opac_input" name="ill_avail_eds_display_opac" value="y" checked>
             [% ELSE %]
@@ -33,7 +33,7 @@
             <p>Should results from this plugin be displayed when a user in the OPAC initiates request creation?</p>
         </div>
         <div id="ill_avail_display_staff" class="ill_avail_config_field">
-            <label for="ill_avail_eds_display_staff">Display results in staff interface: </label>
+            <label for="ill_avail_display_staff_input">Display results in staff interface: </label>
             [% IF config.ill_avail_eds_display_staff %]
                 <input type="checkbox" id="ill_avail_display_staff_input" name="ill_avail_eds_display_staff" value="y" checked>
             [% ELSE %]
