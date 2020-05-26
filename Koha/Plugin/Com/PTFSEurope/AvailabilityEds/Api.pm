@@ -157,9 +157,9 @@ __BODY__
     # if we have an ISBN or ISSN, we just want to use those, otherwise
     # we should use everything
     my @search_params = ();
-    if ($params{IB}) {
+    if ($metadata->{type} eq 'book' && $params{IB}) {
         push @search_params, prep_param('IB', $params{IB});
-    } elsif ($params{IS}) {
+    } elsif ($metadata->{type} eq 'journal' && $params{IS}) {
         push @search_params, prep_param('IS', $params{IS});
     } else {
         foreach my $p(keys %params) {
@@ -174,9 +174,7 @@ __BODY__
         );
     }
 
-    my $search_string = join('&', @search_params);
-
-    my $query = "query=$search_string&includefacets=n";
+    my $search_string = join(' AND ', @search_params);
 
     my @search_headers = (
         'Accept' => 'application/json',
@@ -187,7 +185,7 @@ __BODY__
     # Calculate which page of result we're requesting
     my $page = floor($start / $pageLength) + 1;
     my $search_response = $ua->request(
-        GET "${base_url}edsapi/rest/Search?resultsperpage=$pageLength&pagenumber=$page&query=$query",
+        GET "${base_url}edsapi/rest/Search?query=$search_string&resultsperpage=$pageLength&pagenumber=$page&includefacets=n",
         @search_headers
     );
 
@@ -331,7 +329,11 @@ sub parse_response {
 
 sub prep_param {
     my ($key, $value) = @_;
-    return "AND,$key:$value";
+    # Remove any ampersands
+    $value =~ s/&//g;
+    # We need to escape certain characters in the value
+    $value =~ s/(\.|,|:|'|’)/\\$1/g;
+    return "$key $value";
 }
 
 sub return_error {
