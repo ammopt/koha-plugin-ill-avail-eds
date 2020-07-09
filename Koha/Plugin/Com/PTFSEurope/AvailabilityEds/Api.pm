@@ -329,10 +329,21 @@ sub parse_response {
 
 sub prep_param {
     my ($key, $value) = @_;
+    # If we're prepping author, we need to remove commas and fullstops
+    # and replace with a space. As per EBSCO advice.
+    if ($key eq 'AU') {
+        $value =~ s/(\.|,|)/ /g;
+        # We also need to try and truncate author to a single name, the
+        # following makes the assumption that authors are separated by ;
+        # If it's not, $value remains unchanged
+        my @author_arr = split(/;/, $value);
+        $value = $author_arr[0];
+    } else {
+        # We need to escape certain characters in the value
+        $value =~ s/(\.|,|:|'|’)/\\$1/g;
+    }
     # Remove any ampersands
     $value =~ s/&//g;
-    # We need to escape certain characters in the value
-    $value =~ s/(\.|,|:|'|’)/\\$1/g;
     return "$key $value";
 }
 

@@ -15,7 +15,7 @@ use Digest::MD5 qw( md5_hex );
 use MIME::Base64 qw( decode_base64 );
 use URI::Escape qw ( uri_unescape );
 
-our $VERSION = "1.0.6";
+our $VERSION = "1.0.7";
 
 our $metadata = {
     name            => 'ILL availability - EDS',
