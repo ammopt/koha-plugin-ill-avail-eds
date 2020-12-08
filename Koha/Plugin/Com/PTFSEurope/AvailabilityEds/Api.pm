@@ -28,15 +28,12 @@ use Mojo::Base 'Mojolicious::Controller';
 use Koha::Database;
 use Koha::Plugin::Com::PTFSEurope::AvailabilityEds;
 
-sub search {
+my $base_url = "https://eds-api.ebscohost.com/";
+my $ua = LWP::UserAgent->new;
 
-    # Validate what we've received
-    my $c = shift->openapi->valid_input or return;
+sub get_auth_token {
 
-    my $base_url = "https://eds-api.ebscohost.com/";
-
-    my $start = $c->validation->param('start') || 0;
-    my $pageLength = $c->validation->param('pageLength') || 20;
+    my ($c) = @_;
 
     # Check we've got a userid and password specified in the config,
     # if not, we're using IP authentication
@@ -44,6 +41,86 @@ sub search {
     my $config = decode_json($plugin->retrieve_data('avail_config') || '{}');
     my $userid = $config->{ill_avail_eds_userid};
     my $password = $config->{ill_avail_eds_password};
+
+    # How we proceed depends on our authentication method, if we have
+    # a userid and password specified in the config, we use those
+    my $url;
+    my $body;
+    if ($userid && length $userid > 0 && $password && length $password > 0) {
+        $url = 'authservice/rest/uidauth';
+$body = <<"__BODY__";
+        <UIDAuthRequestMessage xmlns="http://www.ebscohost.com/services/public/AuthService/Response/2012/06/01">
+            <UserId>$userid</UserId>
+            <Password>$password</Password>
+        </UIDAuthRequestMessage>
+__BODY__
+    } else {
+        $url = 'authservice/rest/ipauth';
+    }
+    my @auth_headers = (
+        'Accept'       => 'application/json',
+        'Content-type' => 'text/xml'
+    );
+
+    my $auth_response = $ua->request(
+        POST "${base_url}${url}",
+        @auth_headers,
+        Content => $body
+    );
+
+    my $auth_body = parse_response(
+        $auth_response,
+        { c => $c, err_code => 500, error => 'Unable to authenticate to EDS'}
+    );
+
+    if (!exists $auth_body->{AuthToken}) {
+        return_error(
+            $c,
+            500,
+            'Unable to authenticate to EDS: ' . $auth_response->decoded_content
+        );
+    }
+
+    return $auth_body->{AuthToken};
+}
+
+sub get_session_token {
+    my ($c, $auth_token) = @_;
+
+    my @session_headers = (
+        'Accept'                => 'application/json',
+        'Content-type'          => 'application/json',
+        'x-authenticationToken' => $auth_token
+    );
+
+    my $session_response = $ua->request(
+        GET "${base_url}edsapi/rest/createsession?profile=edsapi",
+        @session_headers
+    );
+
+    my $session_body = parse_response(
+        $session_response,
+        { c => $c, err_code => 500, error => 'Unable to get session token'}
+    );
+
+    if (!exists $session_body->{SessionToken}) {
+        return_error(
+            $c,
+            500,
+            'Unable to get session token: ' . $session_response->decoded_content
+        );
+    }
+
+    return $session_body->{SessionToken};
+}
+
+sub search {
+
+    # Validate what we've received
+    my $c = shift->openapi->valid_input or return;
+
+    my $start = $c->validation->param('start') || 0;
+    my $pageLength = $c->validation->param('pageLength') || 20;
 
     # Map from our property names to EDS search fieldCodes,
     # We create the mapping "backwards" so we can express that, for any
@@ -81,78 +158,11 @@ sub search {
         return_error($c, 400, 'No searchable metadata found');
     }
 
-    # We should be OK to search, so let's start the process
-    # How we do this depends on our authentication method, if we have
-    # a userid and password specified in the config, we use those
-    my $url;
-    my $body;
-    if ($userid && length $userid > 0 && $password && length $password > 0) {
-        $url = 'authservice/rest/uidauth';
-$body = <<"__BODY__";
-        <UIDAuthRequestMessage xmlns="http://www.ebscohost.com/services/public/AuthService/Response/2012/06/01">
-            <UserId>$userid</UserId>
-            <Password>$password</Password>
-        </UIDAuthRequestMessage>
-__BODY__
-    } else {
-        $url = 'authservice/rest/ipauth';
-    }
-    my @auth_headers = (
-        'Accept'       => 'application/json',
-        'Content-type' => 'text/xml'
-    );
+    # We should be OK to continue,
+    # so let's start the process by authenticating
+    my $auth_token = get_auth_token($c);
+    my $session_token = get_session_token($c, $auth_token);
 
-    my $ua = LWP::UserAgent->new;
-    my $auth_response = $ua->request(
-        POST "${base_url}${url}",
-        @auth_headers,
-        Content => $body
-    );
-
-    my $auth_body = parse_response(
-        $auth_response,
-        { c => $c, err_code => 500, error => 'Unable to authenticate to EDS'}
-    );
-
-    if (!exists $auth_body->{AuthToken}) {
-        return_error(
-            $c,
-            500,
-            'Unable to authenticate to EDS: ' . $auth_response->decoded_content
-        );
-    }
-
-    my $auth_token = $auth_body->{AuthToken};
-
-    # Now we have an auth token, we can get a session token
-    my @session_headers = (
-        'Accept'                => 'application/json',
-        'Content-type'          => 'application/json',
-        'x-authenticationToken' => $auth_token
-    );
-
-    my $session_response = $ua->request(
-        GET "${base_url}edsapi/rest/createsession?profile=edsapi",
-        @session_headers
-    );
-
-    my $session_body = parse_response(
-        $session_response,
-        { c => $c, err_code => 500, error => 'Unable to get session token'}
-    );
-
-    if (!exists $session_body->{SessionToken}) {
-        return_error(
-            $c,
-            500,
-            'Unable to get session token: ' . $session_response->decoded_content
-        );
-    }
-
-    my $session_token = $session_body->{SessionToken};
-
-    # So now we have a session token, we can actually do some searching
-    #
     # We have a preference as to what search parameters we should use,
     # if we have an ISBN or ISSN, we just want to use those, otherwise
     # we should use everything
@@ -185,7 +195,7 @@ __BODY__
     # Calculate which page of result we're requesting
     my $page = floor($start / $pageLength) + 1;
     my $search_response = $ua->request(
-        GET "${base_url}edsapi/rest/Search?query=$search_string&resultsperpage=$pageLength&pagenumber=$page&includefacets=n",
+        GET "${base_url}edsapi/rest/Search?query=$search_string&resultsperpage=$pageLength&pagenumber=$page&includefacets=n&expander=fulltext",
         @search_headers
     );
 
@@ -210,7 +220,58 @@ __BODY__
             }
         }
     );
+}
 
+sub fulltext {
+    # Validate what we've received
+    my $c = shift->openapi->valid_input or return;
+
+    my $an = $c->validation->param('an') || '';
+    my $dbid = $c->validation->param('dbid') || '';
+
+    # Bail out if we do not have what we need
+    if (length $an == 0) {
+        return_error($c, 400, 'No accession number found');
+    }
+    if (length $dbid == 0) {
+        return_error($c, 400, 'No database ID found');
+    }
+
+    # We should be OK to continue,
+    # so let's start the process by authenticating
+    my $auth_token = get_auth_token($c);
+    my $session_token = get_session_token($c, $auth_token);
+
+    my @retrieve_headers = (
+        'Accept' => 'application/json',
+        'x-sessionToken' => $session_token,
+        'x-authenticationToken' => $auth_token
+    );
+    my $retrieve_response = $ua->request(
+        GET "${base_url}edsapi/rest/retrieve?dbid=$dbid&an=$an",
+        @retrieve_headers
+    );
+
+    my $retrieve_body = parse_response(
+        $retrieve_response,
+        { c => $c, err_code => 500, error => 'Unable to get search results'}
+    );
+
+    my $links = $retrieve_body->{Record}->{FullText}->{Links};
+
+    if ($links && scalar @{$links} > 0) {
+        my $url = ${$links}[0]->{Url};
+        if ($url) {
+            $c->redirect_to($url);
+            exit;
+        }
+    }
+    return $c->render(
+        status => 404,
+        openapi => {
+            errors => [ { message => 'Unable to locate fulltext' }]
+        }
+    );
 }
 
 sub prep_stats {
@@ -235,6 +296,7 @@ sub prep_response {
         my $issn = get_identifier($record, 'issn');
         my $source = get_source($record);
         my $date = get_date($record);
+        my $fulltext = get_fulltext($record);
         push @{$out}, {
             title  => $title,
             author => $author,
@@ -242,10 +304,61 @@ sub prep_response {
             issn   => $issn,
             url    => $url,
             source => $source,
-            date   => $date
+            date   => $date,
+            links  => $fulltext
         };
     }
     return $out;
+}
+
+sub get_fulltext {
+    my ($record) = @_;
+
+    my @return = ();
+
+    # The logic for deriving whether we have full text available
+    # has been mostly formed using the sources:
+    # https://github.com/ebsco/edsapi-php-sample
+    # and
+    # https://connect.ebsco.com/s/article/EBSCO-Discovery-Service-API-User-Guide
+
+    my $fulltext = $record->{FullText};
+
+    # PDF full text
+    if ($fulltext->{Links}) {
+        foreach my $link(@{$fulltext->{Links}}) {
+            if ($link->{Type} eq 'pdflink' || $link->{Type} eq 'other') {
+                my $an = get_an($record);
+                my $dbid = get_dbid($record);
+                push @return, {
+                    text => 'Download fulltext',
+                    url => "/api/v1/contrib/ill_availability_eds/ill_availability_eds_fulltext?an=$an&dbid=$dbid"
+                };
+            }
+        }
+
+    }
+    if ($fulltext->{CustomLinks}) {
+        foreach my $custom_link(@{$fulltext->{CustomLinks}}) {
+            push @return, {
+                text => $custom_link->{Text},
+                url => $custom_link->{Url}
+            };
+        }
+    }
+    return \@return;
+}
+
+sub get_an {
+    my ($record) = @_;
+
+    return $record->{Header}->{An};
+}
+
+sub get_dbid {
+    my ($record) = @_;
+
+    return $record->{Header}->{DbId};
 }
 
 sub get_identifier {

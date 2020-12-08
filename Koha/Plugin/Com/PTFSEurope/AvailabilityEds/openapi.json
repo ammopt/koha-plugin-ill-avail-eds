@@ -36,5 +36,33 @@
                 }
             }
         }
+    },
+    "/ill_availability_eds_fulltext": {
+        "get": {
+            "x-mojo-to": "Com::PTFSEurope::AvailabilityEds::Api#fulltext",
+            "operationId": "ApiFulltextEds",
+            "tags": ["ill","availability"],
+            "parameters": [
+                {
+                    "name": "an",
+                    "in": "query",
+                    "description": "EDS Accession Number",
+                    "required": true,
+                    "type": "string"
+                },
+                {
+                    "name": "dbid",
+                    "in": "query",
+                    "description": "Database ID",
+                    "required": true,
+                    "type": "string"
+                }
+            ],
+            "responses": {
+                "200": {
+                    "description": "Will forward the user agent to a full text document"
+                }
+            }
+        }
     }
 }
