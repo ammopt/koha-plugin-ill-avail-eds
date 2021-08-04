@@ -19,7 +19,7 @@ use Modern::Perl;
 
 use JSON qw( decode_json );
 use MIME::Base64 qw( decode_base64 );
-use URI::Escape qw ( uri_unescape );
+use URI::Escape qw ( uri_unescape uri_escape );
 use POSIX qw ( floor );
 use LWP::UserAgent;
 use HTTP::Request::Common;
@@ -451,12 +451,11 @@ sub prep_param {
         # If it's not, $value remains unchanged
         my @author_arr = split(/;/, $value);
         $value = $author_arr[0];
-    } else {
-        # We need to escape certain characters in the value
-        $value =~ s/(\.|,|:|'|’)/\\$1/g;
     }
-    # Remove any ampersands
-    $value =~ s/&//g;
+    # Escape and remove characters as necessary
+    $value =~ s/(,)/\\$1/g;
+    $value =~ s/(&|'|’|:)//g;
+    $value = uri_escape($value);
     return "$key $value";
 }
 
