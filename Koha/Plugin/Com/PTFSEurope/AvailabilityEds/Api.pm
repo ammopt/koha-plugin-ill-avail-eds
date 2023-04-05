@@ -164,13 +164,16 @@ sub search {
     my $session_token = get_session_token($c, $auth_token);
 
     # We have a preference as to what search parameters we should use,
-    # if we have an ISBN or ISSN, we just want to use those, otherwise
-    # we should use everything
+    # if we have an ISBN or ISSN, we just want to use those,
+    # likewise, if we only have DOI, we just want to use that,
+    # otherwise we should use everything
     my @search_params = ();
     if ($metadata->{type} eq 'book' && $params{IB}) {
         push @search_params, prep_param('IB', $params{IB});
     } elsif ($metadata->{type} eq 'journal' && $params{IS}) {
         push @search_params, prep_param('IS', $params{IS});
+    } elsif ($params{TX}) {
+        push @search_params, prep_param('TX', $params{TX});
     } else {
         foreach my $p(keys %params) {
             push @search_params, prep_param($p, $params{$p});
