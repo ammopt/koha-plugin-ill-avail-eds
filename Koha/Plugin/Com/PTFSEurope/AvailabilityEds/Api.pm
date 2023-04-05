@@ -19,7 +19,7 @@ use Modern::Perl;
 
 use JSON qw( decode_json );
 use MIME::Base64 qw( decode_base64 );
-use URI::Escape qw ( uri_unescape uri_escape );
+use URI::Escape qw ( uri_unescape uri_escape_utf8 );
 use POSIX qw ( floor );
 use LWP::UserAgent;
 use HTTP::Request::Common;
@@ -455,7 +455,7 @@ sub prep_param {
     # Escape and remove characters as necessary
     $value =~ s/(,)/\\$1/g;
     $value =~ s/(&|'|’|:)//g;
-    $value = uri_escape($value);
+    $value = uri_escape_utf8($value);
     return "$key $value";
 }
 
