@@ -19,7 +19,7 @@ use Modern::Perl;
 
 use JSON qw( decode_json );
 use MIME::Base64 qw( decode_base64 );
-use URI::Escape qw ( uri_unescape uri_escape );
+use URI::Escape qw ( uri_unescape uri_escape_utf8 );
 use POSIX qw ( floor );
 use LWP::UserAgent;
 use HTTP::Request::Common;
@@ -164,13 +164,16 @@ sub search {
     my $session_token = get_session_token($c, $auth_token);
 
     # We have a preference as to what search parameters we should use,
-    # if we have an ISBN or ISSN, we just want to use those, otherwise
-    # we should use everything
+    # if we have an ISBN or ISSN, we just want to use those,
+    # likewise, if we only have DOI, we just want to use that,
+    # otherwise we should use everything
     my @search_params = ();
     if ($metadata->{type} eq 'book' && $params{IB}) {
         push @search_params, prep_param('IB', $params{IB});
     } elsif ($metadata->{type} eq 'journal' && $params{IS}) {
         push @search_params, prep_param('IS', $params{IS});
+    } elsif ($params{TX}) {
+        push @search_params, prep_param('TX', $params{TX});
     } else {
         foreach my $p(keys %params) {
             push @search_params, prep_param($p, $params{$p});
@@ -455,7 +458,7 @@ sub prep_param {
     # Escape and remove characters as necessary
     $value =~ s/(,)/\\$1/g;
     $value =~ s/(&|'|’|:)//g;
-    $value = uri_escape($value);
+    $value = uri_escape_utf8($value);
     return "$key $value";
 }
 
