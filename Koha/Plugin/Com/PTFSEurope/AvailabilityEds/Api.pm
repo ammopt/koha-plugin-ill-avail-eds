@@ -32,18 +32,17 @@ my $base_url = "https://eds-api.ebscohost.com/";
 my $ua       = LWP::UserAgent->new;
 
 sub search {
-
-    # Validate what we've received
     my $c = shift->openapi->valid_input or return;
 
-    my $start      = $c->validation->param('start')      || 0;
-    my $pageLength = $c->validation->param('length') || 20;
+    my $start      = $c->validation->param('start')    || 0;
+    my $pageLength = $c->validation->param('length')   || 20;
+    my $metadata   = $c->validation->param('metadata') || '';
 
-    # Map from our property names to EDS search fieldCodes,
-    # We create the mapping "backwards" so we can express that, for any
-    # given EDS fieldCode, these are the ILL properties that could fulfil
-    # that, in order of preference (most specific to least specific)
-    my %map = (
+    # ILL request metadata coming from 'create' form
+    $metadata = decode_json( decode_base64( uri_unescape($metadata) ) );
+
+    # EBSCO to Koha ILL fieldmap, ordered by most relevant koha field match
+    my %fieldmap = (
         TI => [ 'article_title',  'chapter',        'title' ],
         AU => [ 'article_author', 'chapter_author', 'author' ],
         IB => ['isbn'],
@@ -51,23 +50,16 @@ sub search {
         TX => ['doi']
     );
 
-    # Gather together what we've been passed
-    my $metadata = $c->validation->param('metadata') || '';
-    $metadata = decode_json( decode_base64( uri_unescape($metadata) ) );
-
-    # Try and compile a search parameter list
     my %params = ();
 
-    # Iterate each EDS fieldCode
-    foreach my $fieldcode ( keys %map ) {
+    foreach my $ebsco_code ( keys %fieldmap ) {
+        foreach my $koha_field ( @{ $fieldmap{$ebsco_code} } ) {
 
-        # Iterate over the ILL properties related to this fieldCode
-        # They are in preference order, so we end when we find a
-        # populated one
-        foreach my $prop ( @{ $map{$fieldcode} } ) {
-            my $this_prop = $metadata->{$prop};
-            if ( $this_prop && length $this_prop > 0 ) {
-                $params{$fieldcode} = $this_prop;
+            # Check if this koha field exists in the submitted in metadata
+            if ( $metadata->{$koha_field} && length $metadata->{$koha_field} > 0 ) {
+                $params{$ebsco_code} = $metadata->{$koha_field};
+
+                # Most relevant koha field for this ebsco code was found. Bail
                 last;
             }
         }
@@ -78,27 +70,28 @@ sub search {
         return_error( $c, 400, 'No searchable metadata found' );
     }
 
-    # We should be OK to continue,
-    # so let's start the process by authenticating
-    my $auth_token    = get_auth_token($c);
-    my $session_token = get_session_token( $c, $auth_token );
-
-    # We have a preference as to what search parameters we should use,
-    # if we have an ISBN or ISSN, we just want to use those,
-    # likewise, if we only have DOI, we just want to use that,
-    # otherwise we should use everything
+    # EBSCO search parameters, use only relevant fields where applicable
     my @search_params = ();
+
+    # If a book and we have an ISBN, use only that
     if ( $metadata->{type} eq 'book' && $params{IB} ) {
         push @search_params, prep_param( 'IB', $params{IB} );
+
+    # If a journal and we have an ISSN, use only that
     } elsif ( $metadata->{type} eq 'journal' && $params{IS} ) {
         push @search_params, prep_param( 'IS', $params{IS} );
+
+    # If we have a DOI, use only that
     } elsif ( $params{TX} ) {
         push @search_params, prep_param( 'TX', $params{TX} );
+
+    # None of the above applies; use all submitted fields
     } else {
         foreach my $p ( keys %params ) {
             push @search_params, prep_param( $p, $params{$p} );
         }
     }
+
     if ( @search_params == 0 ) {
         return_error(
             $c,
@@ -108,6 +101,10 @@ sub search {
     }
 
     my $search_string = join( ' AND ', @search_params );
+
+    # Handle EBSCO authentication
+    my $auth_token    = get_auth_token($c);
+    my $session_token = get_session_token( $c, $auth_token );
 
     my @search_headers = (
         'Accept'                => 'application/json',
@@ -295,7 +292,7 @@ sub prep_stats {
 sub prep_response {
     my $response = shift;
 
-    my $out = [];
+    my $out           = [];
     my $plugin_config = get_plugin_config;
 
     my $records = $response->{SearchResult}->{Data}->{Records};
