@@ -296,6 +296,7 @@ sub prep_response {
     my $response = shift;
 
     my $out = [];
+    my $plugin_config = get_plugin_config;
 
     my $records = $response->{SearchResult}->{Data}->{Records};
     foreach my $record ( @{$records} ) {
@@ -307,6 +308,15 @@ sub prep_response {
         my $source   = get_source($record);
         my $date     = get_date($record);
         my $fulltext = get_fulltext($record);
+
+        # If fulltext_only config is true, skip this result if it doesn't have it
+        if (   defined $plugin_config->{ill_avail_display_fulltext_only}
+            && $plugin_config->{ill_avail_display_fulltext_only} eq "y"
+            && !$record->{FullText}->{Text}->{Availability} )
+        {
+            next;
+        }
+
         push @{$out}, {
             title  => $title,
             author => $author,

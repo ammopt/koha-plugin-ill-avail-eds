@@ -79,6 +79,15 @@
                 [% END %]
                 <p>Should results from this plugin be displayed when a staff member initiates request creation?</p>
             </div>
+            <div id="ill_avail_display_fulltext" class="ill_avail_config_field">
+                <label for="ill_avail_display_fulltext_input">Display full text results only: </label>
+                [% IF config.ill_avail_display_fulltext_only %]
+                <input type="checkbox" id="ill_avail_display_fulltext_input" name="ill_avail_display_fulltext_only" value="y" checked>
+                [% ELSE %]
+                <input type="checkbox" id="ill_avail_display_fulltext_input" name="ill_avail_display_fulltext_only" value="y">
+                [% END %]
+                <p>Should this plugin only show results that contain full text download?</p>
+            </div>
             <div id="ill_avail_eds_help" class="ill_avail_config_field">
                 <p>For more information on EDS API authentication, please consult the <a
                         href="http://edswiki.ebscohost.com/EBSCO_Discovery_Service_API_User_Guide#Authentication_Method"
