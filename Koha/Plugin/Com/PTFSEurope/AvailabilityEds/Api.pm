@@ -31,16 +31,20 @@ use Koha::Plugin::Com::PTFSEurope::AvailabilityEds;
 my $base_url = "https://eds-api.ebscohost.com/";
 my $ua       = LWP::UserAgent->new;
 
+sub get_plugin_config {
+    my $plugin = Koha::Plugin::Com::PTFSEurope::AvailabilityEds->new();
+    return $plugin->{config};
+}
+
 sub get_auth_token {
 
     my ($c) = @_;
 
     # Check we've got a userid and password specified in the config,
     # if not, we're using IP authentication
-    my $plugin   = Koha::Plugin::Com::PTFSEurope::AvailabilityEds->new();
-    my $config   = decode_json( $plugin->retrieve_data('avail_config') || '{}' );
-    my $userid   = $config->{ill_avail_eds_userid};
-    my $password = $config->{ill_avail_eds_password};
+    my $plugin_config   = get_plugin_config;
+    my $userid   = $plugin_config->{ill_avail_eds_userid};
+    my $password = $plugin_config->{ill_avail_eds_password};
 
     # How we proceed depends on our authentication method, if we have
     # a userid and password specified in the config, we use those
