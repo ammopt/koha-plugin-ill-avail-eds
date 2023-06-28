@@ -31,93 +31,6 @@ use Koha::Plugin::Com::PTFSEurope::AvailabilityEds;
 my $base_url = "https://eds-api.ebscohost.com/";
 my $ua       = LWP::UserAgent->new;
 
-sub get_plugin_config {
-    my $plugin = Koha::Plugin::Com::PTFSEurope::AvailabilityEds->new();
-    return $plugin->{config};
-}
-
-sub get_auth_token {
-
-    my ($c) = @_;
-
-    # Check we've got a userid and password specified in the config,
-    # if not, we're using IP authentication
-    my $plugin_config   = get_plugin_config;
-    my $userid   = $plugin_config->{ill_avail_eds_userid};
-    my $password = $plugin_config->{ill_avail_eds_password};
-
-    # How we proceed depends on our authentication method, if we have
-    # a userid and password specified in the config, we use those
-    my $url;
-    my $body;
-    if ( $userid && length $userid > 0 && $password && length $password > 0 ) {
-        $url  = 'authservice/rest/uidauth';
-        $body = <<"__BODY__";
-        <UIDAuthRequestMessage xmlns="http://www.ebscohost.com/services/public/AuthService/Response/2012/06/01">
-            <UserId>$userid</UserId>
-            <Password>$password</Password>
-        </UIDAuthRequestMessage>
-__BODY__
-    } else {
-        $url = 'authservice/rest/ipauth';
-    }
-    my @auth_headers = (
-        'Accept'       => 'application/json',
-        'Content-type' => 'text/xml'
-    );
-
-    my $auth_response = $ua->request(
-        POST "${base_url}${url}",
-        @auth_headers,
-        Content => $body
-    );
-
-    my $auth_body = parse_response(
-        $auth_response,
-        { c => $c, err_code => 500, error => 'Unable to authenticate to EDS' }
-    );
-
-    if ( !exists $auth_body->{AuthToken} ) {
-        return_error(
-            $c,
-            500,
-            'Unable to authenticate to EDS: ' . $auth_response->decoded_content
-        );
-    }
-
-    return $auth_body->{AuthToken};
-}
-
-sub get_session_token {
-    my ( $c, $auth_token ) = @_;
-
-    my @session_headers = (
-        'Accept'                => 'application/json',
-        'Content-type'          => 'application/json',
-        'x-authenticationToken' => $auth_token
-    );
-
-    my $session_response = $ua->request(
-        GET "${base_url}edsapi/rest/createsession?profile=edsapi",
-        @session_headers
-    );
-
-    my $session_body = parse_response(
-        $session_response,
-        { c => $c, err_code => 500, error => 'Unable to get session token' }
-    );
-
-    if ( !exists $session_body->{SessionToken} ) {
-        return_error(
-            $c,
-            500,
-            'Unable to get session token: ' . $session_response->decoded_content
-        );
-    }
-
-    return $session_body->{SessionToken};
-}
-
 sub search {
 
     # Validate what we've received
@@ -282,6 +195,93 @@ sub fulltext {
         status  => 404,
         openapi => { errors => [ { message => 'Unable to locate fulltext' } ] }
     );
+}
+
+sub get_plugin_config {
+    my $plugin = Koha::Plugin::Com::PTFSEurope::AvailabilityEds->new();
+    return $plugin->{config};
+}
+
+sub get_auth_token {
+
+    my ($c) = @_;
+
+    # Check we've got a userid and password specified in the config,
+    # if not, we're using IP authentication
+    my $plugin_config = get_plugin_config;
+    my $userid        = $plugin_config->{ill_avail_eds_userid};
+    my $password      = $plugin_config->{ill_avail_eds_password};
+
+    # How we proceed depends on our authentication method, if we have
+    # a userid and password specified in the config, we use those
+    my $url;
+    my $body;
+    if ( $userid && length $userid > 0 && $password && length $password > 0 ) {
+        $url  = 'authservice/rest/uidauth';
+        $body = <<"__BODY__";
+        <UIDAuthRequestMessage xmlns="http://www.ebscohost.com/services/public/AuthService/Response/2012/06/01">
+            <UserId>$userid</UserId>
+            <Password>$password</Password>
+        </UIDAuthRequestMessage>
+__BODY__
+    } else {
+        $url = 'authservice/rest/ipauth';
+    }
+    my @auth_headers = (
+        'Accept'       => 'application/json',
+        'Content-type' => 'text/xml'
+    );
+
+    my $auth_response = $ua->request(
+        POST "${base_url}${url}",
+        @auth_headers,
+        Content => $body
+    );
+
+    my $auth_body = parse_response(
+        $auth_response,
+        { c => $c, err_code => 500, error => 'Unable to authenticate to EDS' }
+    );
+
+    if ( !exists $auth_body->{AuthToken} ) {
+        return_error(
+            $c,
+            500,
+            'Unable to authenticate to EDS: ' . $auth_response->decoded_content
+        );
+    }
+
+    return $auth_body->{AuthToken};
+}
+
+sub get_session_token {
+    my ( $c, $auth_token ) = @_;
+
+    my @session_headers = (
+        'Accept'                => 'application/json',
+        'Content-type'          => 'application/json',
+        'x-authenticationToken' => $auth_token
+    );
+
+    my $session_response = $ua->request(
+        GET "${base_url}edsapi/rest/createsession?profile=edsapi",
+        @session_headers
+    );
+
+    my $session_body = parse_response(
+        $session_response,
+        { c => $c, err_code => 500, error => 'Unable to get session token' }
+    );
+
+    if ( !exists $session_body->{SessionToken} ) {
+        return_error(
+            $c,
+            500,
+            'Unable to get session token: ' . $session_response->decoded_content
+        );
+    }
+
+    return $session_body->{SessionToken};
 }
 
 sub prep_stats {
