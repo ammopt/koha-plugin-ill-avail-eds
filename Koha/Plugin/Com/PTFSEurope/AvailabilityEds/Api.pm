@@ -124,7 +124,7 @@ sub search {
     my $c = shift->openapi->valid_input or return;
 
     my $start      = $c->validation->param('start')      || 0;
-    my $pageLength = $c->validation->param('pageLength') || 20;
+    my $pageLength = $c->validation->param('length') || 20;
 
     # Map from our property names to EDS search fieldCodes,
     # We create the mapping "backwards" so we can express that, for any
