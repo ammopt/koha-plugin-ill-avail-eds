@@ -185,7 +185,6 @@ sub fulltext {
         my $url = ${$links}[0]->{Url};
         if ($url) {
             return $c->redirect_to($url);
-            exit;
         }
     }
     return $c->render(
