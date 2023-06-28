@@ -1,88 +1,102 @@
 [% INCLUDE 'doc-head-open.inc' %]
 <title>Koha: Availability EDS Plugin: Configuration</title>
 <style>
-#ill_avail_config_h3 {
-    margin: 20px;
-}
+    #ill_avail_config_h3 {
+        margin: 20px;
+    }
 
-#ill_avail_configure {
-    display: block;
-    margin: 20px;
-}
+    #ill_avail_configure {
+        display: block;
+        margin: 20px;
+    }
 
-.ill_avail_config_field {
-    padding: 20px 10px;
-    margin: 20px 0;
-    background: #eee;
-    border-radius: 10px;
-    list-style: none;
-}
+    .ill_avail_config_field {
+        padding: 20px 10px;
+        margin: 20px 0;
+        background: #eee;
+        border-radius: 10px;
+        list-style: none;
+    }
 
-#ill_avail_upgrade {
-    margin: 20px;
-}
+    #ill_avail_upgrade {
+        margin: 20px;
+    }
 </style>
-<link rel="stylesheet" type="text/css" href="[% PLUGIN_PATH %]/illavailability.css"></link>
+<link rel="stylesheet" type="text/css" href="[% PLUGIN_PATH %]/illavailability.css">
+</link>
 [% INCLUDE 'doc-head-close.inc' %]
 </head>
+
 <body>
-[% INCLUDE 'header.inc' %]
-[% INCLUDE 'cat-search.inc' %]
+    [% INCLUDE 'header.inc' %]
+    [% INCLUDE 'cat-search.inc' %]
 
-<div id="breadcrumbs"><a href="/cgi-bin/koha/mainpage.pl">Home</a> &rsaquo; <a href="/cgi-bin/koha/plugins/plugins-home.pl">Plugins</a> &rsaquo; ILL availability EDS &rsaquo; Configuration</div>
+    <div id="breadcrumbs"><a href="/cgi-bin/koha/mainpage.pl">Home</a> &rsaquo; <a
+            href="/cgi-bin/koha/plugins/plugins-home.pl">Plugins</a> &rsaquo; ILL availability EDS &rsaquo;
+        Configuration</div>
 
-<div id="doc3">
-    <h3 id="ill_avail_config_h3">Koha: ILL availability EDS: Configuration</h3>
+    <div id="doc3">
+        <h3 id="ill_avail_config_h3">Koha: ILL availability EDS: Configuration</h3>
 
-    <form id="ill_avail_configure" method="get">
-        <input type="hidden" name="class" value="[% CLASS %]"/>
-        <input type="hidden" name="method" value="[% METHOD %]"/>
-        <div id="ill_avail_eds_name" class="ill_avail_config_field">
-            <label for="ill_avail_name_input">Display name: </label><input id="ill_avail_name_input" placeholder="ILL availability - EDS" type="text" name="ill_avail_eds_name" value="[% config.ill_avail_eds_name || "ILL availability - EDS" %]">
-            <p>The text that is displayed in the user interface above search results from EDS</p>
-        </div>
-        <div id="ill_avail_eds_userid" class="ill_avail_config_field">
-            <label for="ill_avail_userid_input">EDS API user ID: </label><input id="ill_avail_userid_input" placeholder="joe_bloggs" type="text" name="ill_avail_eds_userid" value="[% config.ill_avail_eds_userid %]">
-            <p>If your EDS API access is using UserID authentication, specify the user ID here.</p>
-        </div>
-        <div id="ill_avail_eds_password" class="ill_avail_config_field">
-            <label for="ill_avail_password_input">EDS API user password: </label><input id="ill_avail_password_input" placeholder="my_secret_password" type="text" name="ill_avail_eds_password" value="[% config.ill_avail_eds_password %]">
-            <p>If your EDS API access is using UserID authentication, specify the password here.</p>
-        </div>
-        <div id="ill_avail_display_opac" class="ill_avail_config_field">
-            <label for="ill_avail_display_opac_input">Display results in OPAC: </label>
-            [% IF config.ill_avail_eds_display_opac %]
-                <input type="checkbox" id="ill_avail_display_opac_input" name="ill_avail_eds_display_opac" value="y" checked>
-            [% ELSE %]
+        <form id="ill_avail_configure" method="get">
+            <input type="hidden" name="class" value="[% CLASS %]" />
+            <input type="hidden" name="method" value="[% METHOD %]" />
+            <div id="ill_avail_eds_name" class="ill_avail_config_field">
+                <label for="ill_avail_name_input">Display name: </label><input id="ill_avail_name_input"
+                    placeholder="ILL availability - EDS" type="text" name="ill_avail_eds_name"
+                    value="[% config.ill_avail_eds_name || " ILL availability - EDS" %]">
+                <p>The text that is displayed in the user interface above search results from EDS</p>
+            </div>
+            <div id="ill_avail_eds_userid" class="ill_avail_config_field">
+                <label for="ill_avail_userid_input">EDS API user ID: </label><input id="ill_avail_userid_input"
+                    placeholder="joe_bloggs" type="text" name="ill_avail_eds_userid"
+                    value="[% config.ill_avail_eds_userid %]">
+                <p>If your EDS API access is using UserID authentication, specify the user ID here.</p>
+            </div>
+            <div id="ill_avail_eds_password" class="ill_avail_config_field">
+                <label for="ill_avail_password_input">EDS API user password: </label><input
+                    id="ill_avail_password_input" placeholder="my_secret_password" type="text"
+                    name="ill_avail_eds_password" value="[% config.ill_avail_eds_password %]">
+                <p>If your EDS API access is using UserID authentication, specify the password here.</p>
+            </div>
+            <div id="ill_avail_display_opac" class="ill_avail_config_field">
+                <label for="ill_avail_display_opac_input">Display results in OPAC: </label>
+                [% IF config.ill_avail_eds_display_opac %]
+                <input type="checkbox" id="ill_avail_display_opac_input" name="ill_avail_eds_display_opac" value="y"
+                    checked>
+                [% ELSE %]
                 <input type="checkbox" id="ill_avail_display_opac_input" name="ill_avail_eds_display_opac" value="y">
-            [% END %]
-            <p>Should results from this plugin be displayed when a user in the OPAC initiates request creation?</p>
-        </div>
-        <div id="ill_avail_display_staff" class="ill_avail_config_field">
-            <label for="ill_avail_display_staff_input">Display results in staff interface: </label>
-            [% IF config.ill_avail_eds_display_staff %]
-                <input type="checkbox" id="ill_avail_display_staff_input" name="ill_avail_eds_display_staff" value="y" checked>
-            [% ELSE %]
+                [% END %]
+                <p>Should results from this plugin be displayed when a user in the OPAC initiates request creation?</p>
+            </div>
+            <div id="ill_avail_display_staff" class="ill_avail_config_field">
+                <label for="ill_avail_display_staff_input">Display results in staff interface: </label>
+                [% IF config.ill_avail_eds_display_staff %]
+                <input type="checkbox" id="ill_avail_display_staff_input" name="ill_avail_eds_display_staff" value="y"
+                    checked>
+                [% ELSE %]
                 <input type="checkbox" id="ill_avail_display_staff_input" name="ill_avail_eds_display_staff" value="y">
-            [% END %]
-            <p>Should results from this plugin be displayed when a staff member initiates request creation?</p>
-        </div>
-        <div id="ill_avail_eds_help" class="ill_avail_config_field">
-            <p>For more information on EDS API authentication, please consult the <a href="http://edswiki.ebscohost.com/EBSCO_Discovery_Service_API_User_Guide#Authentication_Method" target="_blank">EBSCO Discovery Service API User Guide</a></p>
-        </div>
-        <input type="hidden" name="save" value="1" />
-        <input type="submit" value="Save configuration" />
-    </form>
+                [% END %]
+                <p>Should results from this plugin be displayed when a staff member initiates request creation?</p>
+            </div>
+            <div id="ill_avail_eds_help" class="ill_avail_config_field">
+                <p>For more information on EDS API authentication, please consult the <a
+                        href="http://edswiki.ebscohost.com/EBSCO_Discovery_Service_API_User_Guide#Authentication_Method"
+                        target="_blank">EBSCO Discovery Service API User Guide</a></p>
+            </div>
+            <input type="hidden" name="save" value="1" />
+            <input type="submit" value="Save configuration" />
+        </form>
 
-    <hr/>
+        <hr />
 
-    <div id="ill_avail_upgrade">
-        <h5>Upgrade status</h5>
-        [% IF last_upgraded %]
+        <div id="ill_avail_upgrade">
+            <h5>Upgrade status</h5>
+            [% IF last_upgraded %]
             Plugin was last upgraded on this system on [% last_upgraded | $KohaDates with_hours => 1 %]
-        [% ELSE %]
+            [% ELSE %]
             Plugin has never been upgraded.
-        [% END %]
-    </div>
+            [% END %]
+        </div>
 
-[% INCLUDE 'intranet-bottom.inc' %]
+        [% INCLUDE 'intranet-bottom.inc' %]
