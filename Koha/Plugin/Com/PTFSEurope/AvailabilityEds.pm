@@ -15,14 +15,14 @@ use Digest::MD5 qw( md5_hex );
 use MIME::Base64 qw( decode_base64 );
 use URI::Escape qw ( uri_unescape );
 
-our $VERSION = "1.1.2";
+our $VERSION = "1.2.0";
 
 our $metadata = {
     name            => 'ILL availability - EDS',
-    author          => 'Andrew Isherwood',
+    author          => 'PTFS Europe',
     date_authored   => '2019-09-04',
-    date_updated    => "2020-05-26",
-    minimum_version => '18.11.00.000',
+    date_updated    => "2022-06-28",
+    minimum_version => '22.11.00.000',
     maximum_version => undef,
     version         => $VERSION,
     description     => 'This plugin provides ILL availability searching for the EDS API'
