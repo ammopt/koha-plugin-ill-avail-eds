@@ -265,7 +265,7 @@ sub fulltext {
     if ($links && scalar @{$links} > 0) {
         my $url = ${$links}[0]->{Url};
         if ($url) {
-            $c->redirect_to($url);
+            return $c->redirect_to($url);
             exit;
         }
     }
