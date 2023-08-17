@@ -35,8 +35,8 @@ sub search {
     my $c = shift->openapi->valid_input or return;
 
     my $start      = $c->validation->param('start')    || 0;
-    my $pageLength = $c->validation->param('length')   || 20;
     my $metadata   = $c->validation->param('metadata') || '';
+    my $pageLength = $c->validation->param('length') == -1 ? 100 : 20;
 
     # ILL request metadata coming from 'create' form
     $metadata = decode_json( decode_base64( uri_unescape($metadata) ) );
